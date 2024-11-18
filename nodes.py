@@ -105,7 +105,7 @@ class MagicDanceEncoder:
                 pipe.first_stage_model.encoder = pipe.first_stage_model.encoder.to(device = device, dtype = dtype)
                 pipe.first_stage_model.quant_conv = pipe.first_stage_model.quant_conv.to(device = device, dtype = dtype)
         if image.device != device or image.dtype != dtype:
-            image = model_management.cast_to_device(image, device, dtype)
+            image = image.to(device = device, dtype = dtype)
         
         reference = pipe.get_first_stage_encoding(pipe.encode_first_stage(image))
 
@@ -114,9 +114,9 @@ class MagicDanceEncoder:
             pipe.first_stage_model.quant_conv = pipe.first_stage_model.quant_conv.to(device=model_management.vae_offload_device(), dtype=olddtype)
 
         if image.device != imagedevice or image.dtype != imagedtype:
-            image = model_management.cast_to_device(image, imagedevice, imagedtype)
+            image = image.to(device = imagedevice, dtype = imagedtype)
         if reference.device != imagedevice or reference.dtype != imagedtype:
-            reference = model_management.cast_to_device(reference, imagedevice, imagedtype)
+            reference = reference.to(device = imagedevice, dtype = imagedtype)
         
         return ({'samples':reference},)
 
@@ -173,26 +173,26 @@ class MagicDanceSampler:
         olddtype = pipe.dtype
         if pipe.device != device or pipe.dtype != dtype:
             try:
-                pipe.model = model_management.cast_to_device(pipe.model, device, dtype)
-                pipe.pose_control_model = model_management.cast_to_device(pipe.pose_control_model, device, dtype)
-                pipe.appearance_control_model = model_management.cast_to_device(pipe.appearance_control_model, device, dtype)
-                pipe.betas = model_management.cast_to_device(pipe.betas, device, dtype)
+                pipe.model = pipe.model.to(device = device, dtype = dtype)
+                pipe.pose_control_model = pipe.pose_control_model.to(device = device, dtype = dtype)
+                pipe.appearance_control_model = pipe.appearance_control_model.to(device = device, dtype = dtype)
+                pipe.betas = pipe.betas.to(device = device, dtype = dtype)
             except:
                 model_management.unload_all_models()
                 model_management.soft_empty_cache()
-                pipe.model = model_management.cast_to_device(pipe.model, device, dtype)
-                pipe.pose_control_model = model_management.cast_to_device(pipe.pose_control_model, device, dtype)
-                pipe.appearance_control_model = model_management.cast_to_device(pipe.appearance_control_model, device, dtype)
-                pipe.betas = model_management.cast_to_device(pipe.betas, device, dtype)
+                pipe.model = pipe.model.to(device = device, dtype = dtype)
+                pipe.pose_control_model = pipe.pose_control_model.to(device = device, dtype = dtype)
+                pipe.appearance_control_model = pipe.appearance_control_model.to(device = device, dtype = dtype)
+                pipe.betas = pipe.betas.to(device = device, dtype = dtype)
         
         if c_cross.device != device or c_cross.dtype != dtype:
-            c_cross = model_management.cast_to_device(c_cross, device, dtype)
+            c_cross = c_cross.to(device = device, dtype = dtype)
         if uc_cross.device != device or uc_cross.dtype != dtype:
-            uc_cross = model_management.cast_to_device(uc_cross, device, dtype)
+            uc_cross = uc_cross.to(device = device, dtype = dtype)
         referencedevice = reference["samples"].device
         referencedtype = reference["samples"].dtype
         if reference["samples"].device != device or reference["samples"].dtype != dtype:
-            reference["samples"] = model_management.cast_to_device(reference["samples"], device, dtype)
+            reference["samples"] = reference["samples"].to(device = device, dtype = dtype)
         gene_latent_list = []
         try:
             setattr(pipe, 'load_device', pipe.model.device)
@@ -204,9 +204,9 @@ class MagicDanceSampler:
             pose = poses[i:i+1,:,:,:].permute(0, 3, 1, 2)
             latent = latents["samples"][i:i+1,:,:,:]
             if pose.device != device or pose.dtype != dtype:
-                pose = model_management.cast_to_device(pose, device, dtype)
+                pose = pose.to(device = device, dtype = dtype)
             if latent.device != device or latent.dtype != dtype:
-                latent = model_management.cast_to_device(latent, device, dtype)
+                latent = latent.to(device = device, dtype = dtype)
             c = {"c_concat": [pose], "c_crossattn": [c_cross], "image_control":[reference["samples"]], "wonoise": True, "overlap_sampling": False}
             uc = {"c_concat": [pose], "c_crossattn": [uc_cross], "wonoise": True, "overlap_sampling": False}
             gene_latent, _ = pipe.sample_log(cond=c,
@@ -219,22 +219,22 @@ class MagicDanceSampler:
                 img_callback = lambda x0,j:callback(i*steps+j, x0, None, poses.shape[0]*steps) if callback else None,
             )
             if pose.device != posesdevice or pose.dtype != posesdtype:
-                pose = model_management.cast_to_device(pose, posesdevice, posesdtype)
+                pose = pose.to(device = posesdevice, dtype = posesdtype)
             if latent.device != latentsdevice or latent.dtype != latentsdtype:
-                latent = model_management.cast_to_device(pose, latentsdevice, latentsdtype)
+                latent = pose.to(device = latentsdevice, dtype = latentsdtype)
             if gene_latent.device != latentsdevice or gene_latent.dtype != latentsdtype:
-                gene_latent = model_management.cast_to_device(gene_latent, latentsdevice, latentsdtype)
+                gene_latent = gene_latent.to(device = latentsdevice, dtype = latentsdtype)
             gene_latent_list.append(gene_latent)
         
         if pipe.device != model_management.unet_offload_device() or pipe.dtype != olddtype:
-            pipe = model_management.cast_to_device(pipe, model_management.unet_offload_device(), olddtype)
+            pipe = pipe.to(device = model_management.unet_offload_device(), dtype = olddtype)
         if pipe.model.device != model_management.unet_offload_device() or pipe.model.dtype != olddtype:
-            pipe.model = model_management.cast_to_device(pipe.model, model_management.unet_offload_device(), olddtype)
-            pipe.pose_control_model = model_management.cast_to_device(pipe.pose_control_model, model_management.unet_offload_device(), olddtype)
-            pipe.appearance_control_model = model_management.cast_to_device(pipe.appearance_control_model, model_management.unet_offload_device(), olddtype)
-            pipe.betas = model_management.cast_to_device(pipe.betas, model_management.unet_offload_device(), olddtype)
+            pipe.model = pipe.model.to(device = model_management.unet_offload_device(), dtype = olddtype)
+            pipe.pose_control_model = pipe.pose_control_model.to(device = model_management.unet_offload_device(), dtype = olddtype)
+            pipe.appearance_control_model = pipe.appearance_control_model.to(device = model_management.unet_offload_device(), dtype = olddtype)
+            pipe.betas = pipe.betas.to(device = model_management.unet_offload_device(), dtype = olddtype)
         if reference["samples"].device != referencedevice or reference["samples"].dtype != referencedtype:
-            reference["samples"] = model_management.cast_to_device(reference["samples"], referencedevice, referencedtype)
+            reference["samples"] = reference["samples"].to(device = referencedevice, dtype = referencedtype)
         gene_latents = torch.cat(gene_latent_list, dim=0)        
         return ({"samples":gene_latents},)
     
@@ -274,14 +274,14 @@ class MagicDanceDecoder:
         for i in range(latents["samples"].shape[0]):
             latent = latents["samples"][i:i+1,:,:,:]
             if latent.device != device or latent.dtype != dtype:
-                latent = model_management.cast_to_device(latent, device, dtype)
+                latent = latent.to(device = device, dtype = dtype)
                 
             gene_img = pipe.decode_first_stage(latent)
             
             if latent.device != latentsdevice or latent.dtype != latentsdtype:
-                latent = model_management.cast_to_device(latent, latentsdevice, latentsdtype)
+                latent = latent.to(device = latentsdevice, dtype = latentsdtype)
             if gene_img.device != latentsdevice or gene_img.dtype != latentsdtype:
-                gene_img = model_management.cast_to_device(gene_img, latentsdevice, latentsdtype)
+                gene_img = gene_img.to(device = latentsdevice, dtype = latentsdtype)
             
             gene_img_list.append(gene_img.float().clamp(-1,1).cpu().add(1).mul(0.5))
             if args.preview_method != latent_preview.LatentPreviewMethod.NoPreviews:
