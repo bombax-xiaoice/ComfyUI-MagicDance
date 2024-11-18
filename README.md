@@ -22,7 +22,7 @@ Drag the following image into comfyui, or click Load for custom_nodes/ComfyUI-Ma
 
 Results run under comfy based on poses and image provided by MagicDance
 
-<video src="example_data/magicdance-comfy-example.mp4" width="512" height="512" controls></video>
+https://github.com/user-attachments/assets/ef54fc3c-7b9b-49d5-a36f-3d6313ff88da
 
 ## Tips
 Allow multiple poses (pose images) but only one single reference (image encoded to latent). The input latents should set its first dimension the same as the number of poses, width and height set the same as the reference image.
