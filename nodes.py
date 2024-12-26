@@ -17,7 +17,7 @@ comfy_path = os.path.dirname(folder_paths.__file__)
 sys.path.append(f'{comfy_path}/custom_nodes/ComfyUI-MagicDance')
 print(sys.path)
 
-from model_lib.ControlNet.cldm.model import create_model
+from .model_lib.ControlNet.cldm.model import create_model
 
 script_directory = os.path.dirname(os.path.abspath(__file__))
 
